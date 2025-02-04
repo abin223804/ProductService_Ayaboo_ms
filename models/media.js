@@ -1,4 +1,3 @@
-
 import mongoose from "mongoose";
 
 const mediaSchema = new mongoose.Schema({
@@ -11,15 +10,30 @@ const mediaSchema = new mongoose.Schema({
   format: {
     type: String,
   },
-  imageurl:{
+  imageurl: {
     type: String,
   },
   category: {
     type: String,
   },
+  uploadedBy: {
+    type: String,
+    enum: ["admin", "seller", "store", "user"],
+  },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+  },
+  width: {
+    type: Number,  
+    default: null,
+  },
+  height: {
+    type: Number,  
+    default: null,
+  },
   uploadedAt: { type: Date, default: Date.now },
 });
 
- const mediaModel = mongoose.model("media", mediaSchema);
+const mediaModel = mongoose.model("media", mediaSchema);
 
- export default mediaModel;
+export default mediaModel;

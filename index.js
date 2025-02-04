@@ -4,6 +4,7 @@ import express from 'express'
 import dotenv from 'dotenv'
 import chalk from 'chalk'
 import cors from "cors";
+import cookieParser from "cookie-parser";
 dotenv.config();
 import connectDB from "./config/db.js";
 
@@ -17,6 +18,8 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
+app.use(cookieParser());
+
 
 import mediaRoute from './routes/mediaRoute.js';
 app.use(express.json());

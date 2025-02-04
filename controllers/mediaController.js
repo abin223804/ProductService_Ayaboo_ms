@@ -1,4 +1,49 @@
+import axios from "axios";
+import sharp from "sharp";
 import  File  from "../models/media.js";
+
+//for ImageUpload
+const getImageDimensions = async (filePath, mimetype) => {
+  if (!mimetype.startsWith("image/")) return null;
+
+  try {
+    let imageBuffer;
+
+    if (filePath.startsWith("http")) {
+      const response = await axios.get(filePath, { responseType: 'arraybuffer' });
+      imageBuffer = Buffer.from(response.data);  
+    } else {
+      imageBuffer = await sharp(filePath).toBuffer();
+    }
+
+    const metadata = await sharp(imageBuffer).metadata();
+
+    return { width: metadata.width, height: metadata.height };
+  } catch (error) {
+    console.error("Error extracting image dimensions:", error);
+    return null;  
+  }
+};
+
+//for ImageUpload
+
+const getCurrentUser = async (token) => {
+  try {
+    const response = await axios.get("http://localhost:4000/user_api/user/getCurrentuser", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (response.data.success) {
+      return response.data.user._id; 
+    } else {
+      throw new Error("User retrieval failed");
+    }
+  } catch (error) {
+    console.error("Error fetching current user:", error);
+    throw new Error("Failed to get userId");
+  }
+};
+
 
 const createMedia = async (req, res) => {
   try {
@@ -6,15 +51,35 @@ const createMedia = async (req, res) => {
       return res.status(400).json({ message: "No files uploaded" });
     }
 
+   
+    let token = req.cookies["us_b2b_tkn"] || (req.headers.authorization && req.headers.authorization.split(" ")[1]);
+
+    if (!token) {
+      return res.status(401).json({ message: "Unauthorized: No token provided" });
+    }
+
+    const userId = await getCurrentUser(token);
+
     const { category } = req.body;
 
-    const savedFiles = req.files.map((file) => ({
-      name:file.originalname,
-      size:file.size,
-      format: file.mimetype,
-      category,
-      imageurl: file.path, 
-    }));
+    const savedFiles = await Promise.all(
+      req.files.map(async (file) => {
+        const dimensions = await getImageDimensions(file.path, file.mimetype);
+
+        return {
+          name: file.originalname,
+          size: file.size,
+          format: file.mimetype,
+          category,
+          imageurl: file.path, 
+          width: dimensions?.width || null,
+          height: dimensions?.height || null,
+          uploadedBy: "user",
+          userId,
+        };
+      })
+    );
+
 
     await File.insertMany(savedFiles);
 
@@ -23,10 +88,9 @@ const createMedia = async (req, res) => {
       files: savedFiles,
     });
   } catch (error) {
-    res.status(500).json({ message: "File upload failed", error });
+    res.status(500).json({ message: "File upload failed", error: error.message });
   }
 };
-
 
 
 const getAllMedia = async (req, res) => {
@@ -54,8 +118,8 @@ const getAllMedia = async (req, res) => {
 
   const getMediaById = async (req, res) => {
     try {
-      const { id } = req.params; // Get ID from URL params
-      const file = await File.findById(id); // Fetch file by ID
+      const { id } = req.params; 
+      const file = await File.findById(id); 
   
       if (!file) {
         return res.status(404).json({ success: false, message: "Media file not found" });
