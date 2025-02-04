@@ -1,5 +1,6 @@
 import axios from "axios";
 import sharp from "sharp";
+import jwt from "jsonwebtoken";
 import  File  from "../models/media.js";
 
 //for ImageUpload
@@ -25,25 +26,6 @@ const getImageDimensions = async (filePath, mimetype) => {
   }
 };
 
-//for ImageUpload
-
-const getCurrentUser = async (token) => {
-  try {
-    const response = await axios.get("http://localhost:4000/user_api/user/getCurrentuser", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    if (response.data.success) {
-      return response.data.user._id; 
-    } else {
-      throw new Error("User retrieval failed");
-    }
-  } catch (error) {
-    console.error("Error fetching current user:", error);
-    throw new Error("Failed to get userId");
-  }
-};
-
 
 const createMedia = async (req, res) => {
   try {
@@ -51,14 +33,41 @@ const createMedia = async (req, res) => {
       return res.status(400).json({ message: "No files uploaded" });
     }
 
-   
-    let token = req.cookies["us_b2b_tkn"] || (req.headers.authorization && req.headers.authorization.split(" ")[1]);
+    const cookies = req.headers.authorization || "";
+    console.log(cookies, "cookies");
 
-    if (!token) {
-      return res.status(401).json({ message: "Unauthorized: No token provided" });
+    const cookieParts = cookies.split("=");
+    if (cookieParts.length < 2) {
+      return res.status(401).json({ message: "Unauthorized: Invalid token format" });
     }
 
-    const userId = await getCurrentUser(token);
+    const tokenPrefix = cookieParts[0]; 
+    const token = cookieParts[1]; 
+
+    let secretKey;
+    let uploadedBy;
+    
+    if (tokenPrefix.startsWith("ad_b2b_tkn")) {
+      secretKey = process.env.JWT_SECRET_ADMIN;
+      uploadedBy = "admin";
+    } else if (tokenPrefix.startsWith("sl_b2b_tkn")) {
+      secretKey = process.env.JWT_SECRET_SELLER;
+      uploadedBy = "seller";
+    } else if (tokenPrefix.startsWith("st_b2b_tkn")) {
+      secretKey = process.env.JWT_SECRET_STORE;
+      uploadedBy = "store";
+    } else {
+      return res.status(401).json({ message: "Unauthorized: Unknown token type" });
+    }
+
+      
+    let userId;
+    try {
+      const decoded = jwt.verify(token, secretKey);
+      userId = decoded.userId;
+    } catch (err) {
+      return res.status(401).json({ message: "Unauthorized: Invalid token" });
+    }
 
     const { category } = req.body;
 
@@ -71,15 +80,14 @@ const createMedia = async (req, res) => {
           size: file.size,
           format: file.mimetype,
           category,
-          imageurl: file.path, 
+          imageurl: file.path,
           width: dimensions?.width || null,
           height: dimensions?.height || null,
-          uploadedBy: "user",
+          uploadedBy,  // Dynamically assigned based on token type
           userId,
         };
       })
     );
-
 
     await File.insertMany(savedFiles);
 
@@ -88,6 +96,7 @@ const createMedia = async (req, res) => {
       files: savedFiles,
     });
   } catch (error) {
+    console.error("File upload error:", error);
     res.status(500).json({ message: "File upload failed", error: error.message });
   }
 };
