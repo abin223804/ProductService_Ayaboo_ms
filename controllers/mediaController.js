@@ -56,10 +56,10 @@ const createMedia = async (req, res) => {
       secretKey = process.env.JWT_SECRET_ADMIN;
       uploadedBy = "admin";
     } else if (tokenPrefix.startsWith("sl_b2b_tkn")) {
-      secretKey = process.env.JWT_SECRET_Seller;
+      secretKey = process.env.JWT_SECRET_SELLER;
       uploadedBy = "seller";
     } else if (tokenPrefix.startsWith("st_b2b_tkn")) {
-      secretKey = process.env.JWT_SECRET_Store;
+      secretKey = process.env.JWT_SECRET_STORE;
       uploadedBy = "store";
     } else {
       return res
