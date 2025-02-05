@@ -36,6 +36,9 @@ const createMedia = async (req, res) => {
 
     const cookies = req.headers.authorization || "";
 
+    console.log("Cookies:", cookies);
+    
+
     const cookieParts = cookies.split("=");
     if (cookieParts.length < 2) {
       return res
@@ -53,10 +56,10 @@ const createMedia = async (req, res) => {
       secretKey = process.env.JWT_SECRET_ADMIN;
       uploadedBy = "admin";
     } else if (tokenPrefix.startsWith("sl_b2b_tkn")) {
-      secretKey = process.env.JWT_SECRET_SELLER;
+      secretKey = process.env.JWT_SECRET_Seller;
       uploadedBy = "seller";
     } else if (tokenPrefix.startsWith("st_b2b_tkn")) {
-      secretKey = process.env.JWT_SECRET_STORE;
+      secretKey = process.env.JWT_SECRET_Store;
       uploadedBy = "store";
     } else {
       return res
