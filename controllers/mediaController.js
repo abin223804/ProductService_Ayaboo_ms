@@ -1,7 +1,7 @@
 import axios from "axios";
 import sharp from "sharp";
 import jwt from "jsonwebtoken";
-import  File  from "../models/media.js";
+import File from "../models/media.js";
 
 //for ImageUpload
 const getImageDimensions = async (filePath, mimetype) => {
@@ -11,8 +11,10 @@ const getImageDimensions = async (filePath, mimetype) => {
     let imageBuffer;
 
     if (filePath.startsWith("http")) {
-      const response = await axios.get(filePath, { responseType: 'arraybuffer' });
-      imageBuffer = Buffer.from(response.data);  
+      const response = await axios.get(filePath, {
+        responseType: "arraybuffer",
+      });
+      imageBuffer = Buffer.from(response.data);
     } else {
       imageBuffer = await sharp(filePath).toBuffer();
     }
@@ -22,10 +24,9 @@ const getImageDimensions = async (filePath, mimetype) => {
     return { width: metadata.width, height: metadata.height };
   } catch (error) {
     console.error("Error extracting image dimensions:", error);
-    return null;  
+    return null;
   }
 };
-
 
 const createMedia = async (req, res) => {
   try {
@@ -34,19 +35,20 @@ const createMedia = async (req, res) => {
     }
 
     const cookies = req.headers.authorization || "";
-    console.log(cookies, "cookies");
 
     const cookieParts = cookies.split("=");
     if (cookieParts.length < 2) {
-      return res.status(401).json({ message: "Unauthorized: Invalid token format" });
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: Invalid token format" });
     }
 
-    const tokenPrefix = cookieParts[0]; 
-    const token = cookieParts[1]; 
+    const tokenPrefix = cookieParts[0];
+    const token = cookieParts[1];
 
     let secretKey;
     let uploadedBy;
-    
+
     if (tokenPrefix.startsWith("ad_b2b_tkn")) {
       secretKey = process.env.JWT_SECRET_ADMIN;
       uploadedBy = "admin";
@@ -57,10 +59,11 @@ const createMedia = async (req, res) => {
       secretKey = process.env.JWT_SECRET_STORE;
       uploadedBy = "store";
     } else {
-      return res.status(401).json({ message: "Unauthorized: Unknown token type" });
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: Unknown token type" });
     }
 
-      
     let userId;
     try {
       const decoded = jwt.verify(token, secretKey);
@@ -83,7 +86,7 @@ const createMedia = async (req, res) => {
           imageurl: file.path,
           width: dimensions?.width || null,
           height: dimensions?.height || null,
-          uploadedBy,  // Dynamically assigned based on token type
+          uploadedBy,
           userId,
         };
       })
@@ -97,89 +100,143 @@ const createMedia = async (req, res) => {
     });
   } catch (error) {
     console.error("File upload error:", error);
-    res.status(500).json({ message: "File upload failed", error: error.message });
+    res
+      .status(500)
+      .json({ message: "File upload failed", error: error.message });
+  }
+};
+
+const getAllMedia = async (req, res) => {
+  try {
+    const files = await File.find();
+
+    if (files.length === 0) {
+      return res.status(404).json({ message: "No media files found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Media files retrieved successfully",
+      files,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve media files",
+      error: error.message,
+    });
+  }
+};
+
+const deleteAllMedia = async (req, res) => {
+  try {
+    const result = await File.deleteMany({});
+
+    if (result.length === 0) {
+      return res.status(404).json({ message: "No media files found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Successfully deleted ${result.deletedCount} files`,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete media files",
+      error: error.message,
+    });
+  }
+};
+
+const getMediaById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const file = await File.find({ userId:id });
+
+    if (!file) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Media file not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Media file retrieved successfully",
+      file,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve media file",
+      error: error.message,
+    });
+  }
+};
+
+const deleteMediaById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const file = await File.findByIdAndDelete(id);
+
+    if (!file) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Media file not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Media file deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete media file",
+      error: error.message,
+    });
+  }
+};
+
+const deleteMultipleMedia = async (req, res) => {
+  try {
+    const { ids } = req.body;
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid array of media IDs",
+      });
+    }
+
+    const result = await mediaModel.deleteMany({ _id: { $in: ids } });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No media files found with the provided IDs",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Successfully deleted ${result.deletedCount} media file(s)`,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete media files",
+      error: error.message,
+    });
   }
 };
 
 
-const getAllMedia = async (req, res) => {
-    try {
-      const files = await File.find(); 
-  
-      if (files.length === 0) {
-        return res.status(404).json({ message: "No media files found" });
-      }
-  
-      res.status(200).json({
-        success: true,
-        message: "Media files retrieved successfully",
-        files,
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: "Failed to retrieve media files",
-        error: error.message,
-      });
-    }
-  };
-
-
-  const getMediaById = async (req, res) => {
-    try {
-      const { id } = req.params; 
-      const file = await File.findById(id); 
-  
-      if (!file) {
-        return res.status(404).json({ success: false, message: "Media file not found" });
-      }
-  
-      res.status(200).json({
-        success: true,
-        message: "Media file retrieved successfully",
-        file,
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: "Failed to retrieve media file",
-        error: error.message,
-      });
-    }
-  };
-
-
-
-  
-  const deleteMediaById = async (req, res) => {
-    try {
-      const { id } = req.params; 
-      const file = await File.findByIdAndDelete(id); 
-  
-      if (!file) {
-        return res.status(404).json({ success: false, message: "Media file not found" });
-      }
-  
-      res.status(200).json({
-        success: true,
-        message: "Media file deleted successfully",
-       
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: "Failed to delete media file",
-        error: error.message,
-      });
-    }
-  };
-
-
-
 export default {
   createMedia,
-  getAllMedia ,
-  getMediaById ,
-  deleteMediaById
-  
+  getAllMedia,
+  getMediaById,
+  deleteMediaById,
+  deleteAllMedia,
+  deleteMultipleMedia
 };

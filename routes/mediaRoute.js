@@ -13,6 +13,10 @@ router.get('/getMediaById/:id', mediaController.getMediaById);
 
 router.delete('/deleteMediaById/:id', mediaController.deleteMediaById);
 
+router.delete('/deleteAllMedia', mediaController.deleteAllMedia);
+
+router.delete('/deleteMultipleMedia', mediaController.deleteMultipleMedia);
+
 
 
 export default router;
