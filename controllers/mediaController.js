@@ -209,7 +209,7 @@ const deleteMultipleMedia = async (req, res) => {
       });
     }
 
-    const result = await mediaModel.deleteMany({ _id: { $in: ids } });
+    const result = await File.deleteMany({ _id: { $in: ids } });
 
     if (result.deletedCount === 0) {
       return res.status(404).json({
