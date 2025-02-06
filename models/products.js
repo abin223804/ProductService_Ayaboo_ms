@@ -9,8 +9,7 @@ const taxDetailsSchema = new mongoose.Schema(
     ],
     isCess: Boolean,
     cess: Number,
-  },
-  { _id: false }
+  }
 );
 
 const variationDetailSchema = new mongoose.Schema(
@@ -21,8 +20,7 @@ const variationDetailSchema = new mongoose.Schema(
     discount: Number,
     sellingPrice: Number,
     skuId: String,
-  },
-  { _id: false }
+  }
 );
 
 const variationSchema = new mongoose.Schema(
@@ -32,8 +30,7 @@ const variationSchema = new mongoose.Schema(
     colorName: String,
     sample: Boolean,
     details: [variationDetailSchema],
-  },
-  { _id: false }
+  }
 );
 
 const pricePerPieceSchema = new mongoose.Schema(
@@ -41,8 +38,7 @@ const pricePerPieceSchema = new mongoose.Schema(
     minPiece: Number,
     maxPiece: Number,
     discount: Number,
-  },
-  { _id: false }
+  }
 );
 
 const productDimensionsSchema = new mongoose.Schema(
@@ -50,13 +46,11 @@ const productDimensionsSchema = new mongoose.Schema(
     productHeight: Number,
     productLength: Number,
     productWidth: Number,
-  },
-  { _id: false }
+  }
 );
 
 const productSchema = new mongoose.Schema(
   {
-    _id: Number,
     productOwner: String,
     productName: String,
     mrp: Number,
