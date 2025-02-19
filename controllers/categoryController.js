@@ -128,7 +128,7 @@ const getAllCategories = async (req, res) => {
       category.updatedAt = Date.now();
       await category.save();
   
-      return res.status(200).json({ success: true, message: "Category soft deleted successfully" });
+      return res.status(200).json({ success: true, message: "Category soft deleted successfully", category: category});
     } catch (error) {
       return res.status(500).json({ success: false, message: "Server error", error: error.message });
     }
