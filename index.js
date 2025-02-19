@@ -6,6 +6,8 @@ import chalk from 'chalk'
 import cors from "cors";
 import cookieParser from "cookie-parser";
 dotenv.config();
+import mediaRoute from './routes/mediaRoute.js';
+import categoryRoute from './routes/categoryRoute.js';
 import connectDB from "./config/db.js";
 
 
@@ -23,11 +25,12 @@ app.options("*", cors(corsOptions));
 app.use(cookieParser());
 
 
-import mediaRoute from './routes/mediaRoute.js';
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/media", mediaRoute);
+app.use("/category", categoryRoute);
 
 
 app.listen(process.env.PORT, () => {

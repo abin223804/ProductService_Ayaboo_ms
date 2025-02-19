@@ -9,6 +9,12 @@ const categorySchema = new mongoose.Schema({
     ref: "Category",
     default: null,
   },
+  subcategories: [ 
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+    },
+  ],
   coverImage: {
     type: String,
   },
@@ -35,7 +41,7 @@ const categorySchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-});
+},{ timestamps: true });
 
 const categoryModel = mongoose.model("Category", categorySchema);
 
