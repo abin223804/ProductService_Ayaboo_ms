@@ -134,50 +134,82 @@ const getAllCategories = async (req, res) => {
     }
   };
 
-  const togglePublished = async (req, res) => {
+//   const togglePublished = async (req, res) => {
+//     try {
+//       const { id } = req.params;
+  
+//       const category = await Category.findById(id);
+//       if (!category || category.isDeleted) {
+//         return res.status(404).json({ success: false, message: "Category not found" });
+//       }
+  
+//       category.published = !category.published;
+//       category.updatedAt = Date.now();
+//       await category.save();
+  
+//       return res.status(200).json({ success: true, message: `Category published status updated to ${category.published}`, category });
+//     } catch (error) {
+//       return res.status(500).json({ success: false, message: "Server error", error: error.message });
+//     }
+//   };
+
+//   const toggleFeatured = async (req, res) => {
+//     try {
+//       const { id } = req.params;
+  
+//       const category = await Category.findById(id);
+//       if (!category || category.isDeleted) {
+//         return res.status(404).json({ success: false, message: "Category not found" });
+//       }
+  
+//       category.featured = !category.featured;
+//       category.updatedAt = Date.now();
+//       await category.save();
+  
+//       return res.status(200).json({ success: true, message: `Category featured status updated to ${category.featured}`, category });
+//     } catch (error) {
+//       return res.status(500).json({ success: false, message: "Server error", error: error.message });
+//     }
+//   };
+
+
+ const toggleCategoryStatus = async (req, res) => {
     try {
       const { id } = req.params;
+      const { field } = req.body; 
+  
+      if (!["published", "featured"].includes(field)) {
+        return res.status(400).json({ success: false, message: "Invalid field. Allowed: 'published', 'featured'" });
+      }
   
       const category = await Category.findById(id);
       if (!category || category.isDeleted) {
         return res.status(404).json({ success: false, message: "Category not found" });
       }
   
-      category.published = !category.published;
+      category[field] = !category[field]; 
       category.updatedAt = Date.now();
       await category.save();
   
-      return res.status(200).json({ success: true, message: `Category published status updated to ${category.published}`, category });
+      return res.status(200).json({ 
+        success: true, 
+        message: `Category ${field} status updated to ${category[field]}`, 
+        category 
+      });
     } catch (error) {
       return res.status(500).json({ success: false, message: "Server error", error: error.message });
     }
   };
 
-  const toggleFeatured = async (req, res) => {
-    try {
-      const { id } = req.params;
-  
-      const category = await Category.findById(id);
-      if (!category || category.isDeleted) {
-        return res.status(404).json({ success: false, message: "Category not found" });
-      }
-  
-      category.featured = !category.featured;
-      category.updatedAt = Date.now();
-      await category.save();
-  
-      return res.status(200).json({ success: true, message: `Category featured status updated to ${category.featured}`, category });
-    } catch (error) {
-      return res.status(500).json({ success: false, message: "Server error", error: error.message });
-    }
-  };
+
 
 export default {
   createCategory,
   updateCategory,
   getAllCategories,
   softDeleteCategory,
-  togglePublished,
-  toggleFeatured,
-  getAllCategories
+//   togglePublished,
+//   toggleFeatured,
+  getAllCategories,
+  toggleCategoryStatus
 };

@@ -9,7 +9,8 @@ router.put("/deleteCategory/:id", categoryController.softDeleteCategory);
 
 router.get("/getCategories", categoryController.getAllCategories);
 
-router.put("/toggle-published/:id", categoryController.togglePublished);
-router.put("/toggle-featured/:id", categoryController.toggleFeatured);
+// router.put("/toggle-published/:id", categoryController.togglePublished);
+// router.put("/toggle-featured/:id", categoryController.toggleFeatured);
 
+router.patch("/toggle-status/:id", categoryController.toggleCategoryStatus);
 export default router;
