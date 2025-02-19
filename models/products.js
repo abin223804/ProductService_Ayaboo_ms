@@ -1,53 +1,43 @@
 import mongoose from "mongoose";
 
-const taxDetailsSchema = new mongoose.Schema(
-  {
-    taxSlab: [
-      {
-        name: String,
-      },
-    ],
-    isCess: Boolean,
-    cess: Number,
-  }
-);
+const taxDetailsSchema = new mongoose.Schema({
+  taxSlab: [
+    {
+      name: String,
+    },
+  ],
+  isCess: Boolean,
+  cess: Number,
+});
 
-const variationDetailSchema = new mongoose.Schema(
-  {
-    size: String,
-    bundleQuantity: Number,
-    stock: Number,
-    discount: Number,
-    sellingPrice: Number,
-    skuId: String,
-  }
-);
+const variationDetailSchema = new mongoose.Schema({
+  size: String,
+  bundleQuantity: Number,
+  stock: Number,
+  discount: Number,
+  sellingPrice: Number,
+  skuId: String,
+});
 
-const variationSchema = new mongoose.Schema(
-  {
-    image: String,
-    colorCode: String,
-    colorName: String,
-    sample: Boolean,
-    details: [variationDetailSchema],
-  }
-);
+const variationSchema = new mongoose.Schema({
+  image: String,
+  colorCode: String,
+  colorName: String,
+  sample: Boolean,
+  details: [variationDetailSchema],
+});
 
-const pricePerPieceSchema = new mongoose.Schema(
-  {
-    minPiece: Number,
-    maxPiece: Number,
-    discount: Number,
-  }
-);
+const pricePerPieceSchema = new mongoose.Schema({
+  minPiece: Number,
+  maxPiece: Number,
+  discount: Number,
+});
 
-const productDimensionsSchema = new mongoose.Schema(
-  {
-    productHeight: Number,
-    productLength: Number,
-    productWidth: Number,
-  }
-);
+const productDimensionsSchema = new mongoose.Schema({
+  productHeight: Number,
+  productLength: Number,
+  productWidth: Number,
+});
 
 const productSchema = new mongoose.Schema(
   {
