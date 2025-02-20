@@ -62,6 +62,42 @@ const getAllCategories = async (req, res) => {
     }
   };
 
+
+
+
+
+  const populateSubcategoriesRecursively = async (category) => {
+    if (!category.subcategories || category.subcategories.length === 0) {
+      return category;
+    }
+  
+    
+    category.subcategories = await Category.find({ _id: { $in: category.subcategories } }).lean();
+  
+    
+    for (let i = 0; i < category.subcategories.length; i++) {
+      category.subcategories[i] = await populateSubcategoriesRecursively(category.subcategories[i]);
+    }
+  
+    return category;
+  };
+  
+   const getAllCategories1 = async (req, res) => {
+    try {
+      let categories = await Category.find({ isDeleted: false }).lean();
+  
+      
+      for (let i = 0; i < categories.length; i++) {
+        categories[i] = await populateSubcategoriesRecursively(categories[i]);
+      }
+  
+      return res.status(200).json({ success: true, categories });
+    } catch (error) {
+      return res.status(500).json({ success: false, message: "Server error", error: error.message });
+    }
+  };
+  
+
  const updateCategory = async (req, res) => {
     try {
       const { name, parentId, coverImage, iconImage } = req.body;
@@ -247,6 +283,7 @@ export default {
   createCategory,
   updateCategory,
   getAllCategories,
+  getAllCategories1,
   softDeleteCategory, 
   getAllCategories,
   toggleCategoryStatus,
