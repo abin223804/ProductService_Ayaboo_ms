@@ -13,4 +13,7 @@ router.get("/getCategories", categoryController.getAllCategories);
 // router.put("/toggle-featured/:id", categoryController.toggleFeatured);
 
 router.patch("/toggle-status/:id", categoryController.toggleCategoryStatus);
+router.delete("/hard-delete-all", categoryController.hardDeleteAllCategories);
+router.delete("/hard-delete/:id",categoryController.hardDeleteCategory);
+
 export default router;

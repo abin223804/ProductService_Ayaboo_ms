@@ -56,7 +56,7 @@ const createCategory = async (req, res) => {
 const getAllCategories = async (req, res) => {
     try {
       const categories = await Category.find({ isDeleted: false }).populate("subcategories");
-      return res.status(200).json({ success: true, categories });
+      return res.status(200).json({ success: true, category:categories });
     } catch (error) {
       return res.status(500).json({ success: false, message: "Server error", error: error.message });
     }
@@ -134,43 +134,43 @@ const getAllCategories = async (req, res) => {
     }
   };
 
-//   const togglePublished = async (req, res) => {
-//     try {
-//       const { id } = req.params;
-  
-//       const category = await Category.findById(id);
-//       if (!category || category.isDeleted) {
-//         return res.status(404).json({ success: false, message: "Category not found" });
-//       }
-  
-//       category.published = !category.published;
-//       category.updatedAt = Date.now();
-//       await category.save();
-  
-//       return res.status(200).json({ success: true, message: `Category published status updated to ${category.published}`, category });
-//     } catch (error) {
-//       return res.status(500).json({ success: false, message: "Server error", error: error.message });
-//     }
-//   };
 
-//   const toggleFeatured = async (req, res) => {
-//     try {
-//       const { id } = req.params;
+
+
   
-//       const category = await Category.findById(id);
-//       if (!category || category.isDeleted) {
-//         return res.status(404).json({ success: false, message: "Category not found" });
-//       }
+
+
+
+
   
-//       category.featured = !category.featured;
-//       category.updatedAt = Date.now();
-//       await category.save();
+
+
+
   
-//       return res.status(200).json({ success: true, message: `Category featured status updated to ${category.featured}`, category });
-//     } catch (error) {
-//       return res.status(500).json({ success: false, message: "Server error", error: error.message });
-//     }
-//   };
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+
+
+
+  
+
+
+
+
+
 
 
  const toggleCategoryStatus = async (req, res) => {
@@ -201,15 +201,56 @@ const getAllCategories = async (req, res) => {
     }
   };
 
+  const hardDeleteAllCategories = async (req, res) => {
+    try {
+      const result = await Category.deleteMany({}); 
+  
+      return res.status(200).json({
+        success: true,
+        message: "All categories have been permanently deleted",
+        deletedCount: result.deletedCount, 
+      });
+    } catch (error) {
+      return res.status(500).json({ success: false, message: "Server error", error: error.message });
+    }
+  };
+
+
+   const hardDeleteCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const category = await Category.findById(id);
+    if (!category) {
+      return res.status(404).json({ success: false, message: "Category not found" });
+    }
+
+    
+    if (category.parentId) {
+      await Category.findByIdAndUpdate(category.parentId, { $pull: { subcategories: id } });
+    }
+
+    await Category.findByIdAndDelete(id); 
+
+    return res.status(200).json({
+      success: true,
+      message: "Category permanently deleted",
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Server error", error: error.message });
+  }
+};
+
 
 
 export default {
   createCategory,
   updateCategory,
   getAllCategories,
-  softDeleteCategory,
-//   togglePublished,
-//   toggleFeatured,
+  softDeleteCategory, 
   getAllCategories,
-  toggleCategoryStatus
+  toggleCategoryStatus,
+  hardDeleteAllCategories,
+  hardDeleteCategory,
+  
 };
