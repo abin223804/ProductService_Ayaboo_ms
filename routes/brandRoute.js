@@ -5,7 +5,6 @@ const router = express.Router();
 
 router.post("/createBrand", brandController.createBrand);
 router.get("/getBrands", brandController.getAllBrands);
-
 router.get("/getAllBrands", brandController.getAllBrands);
 
 router.put("/updateBrand/:id", brandController.updateBrand);
