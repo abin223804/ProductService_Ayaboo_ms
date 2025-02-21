@@ -20,6 +20,10 @@ const BrandSchema = new mongoose.Schema(
     nonObjectiveDocument: {
       type: String,
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
