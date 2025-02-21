@@ -11,8 +11,6 @@ router.put("/updateBrand/:id", brandController.updateBrand);
 
 router.put("/softDeleteBrand/:id", brandController.softDeleteBrand);
 router.delete("/hardDeleteAllBrands", brandController.hardDeleteAllBrands);
-
-
-
+router.delete("/hardDeleteBrand/:id", brandController.hardDeleteBrand);
 
 export default router;

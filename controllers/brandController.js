@@ -112,6 +112,23 @@ import Brand from '../models/brand.js';
     }
   };
   
+   const hardDeleteBrand = async (req, res) => {
+    try {
+      const brand = await Brand.findById(req.params.id);
+  
+      if (!brand) {
+        return res.status(404).json({ success: false, message: 'Brand not found' });
+      }
+  
+      await Brand.findByIdAndDelete(req.params.id);
+  
+      res.status(200).json({ success: true, message: 'Brand permanently deleted' });
+  
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  };
+  
 
 
 export default {
@@ -121,4 +138,5 @@ export default {
     updateBrand,
     softDeleteBrand,
     hardDeleteAllBrands,
+    hardDeleteBrand,
 }
