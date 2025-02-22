@@ -20,6 +20,13 @@ const BrandSchema = new mongoose.Schema(
     nonObjectiveDocument: {
       type: String,
     },
+    createdBy:{
+      type: String,
+      enum:[ "Seller","Store", "Admin"],
+    },
+     userId: {
+        type: mongoose.Schema.Types.ObjectId,
+      },
     isDeleted: {
       type: Boolean,
       default: false,
