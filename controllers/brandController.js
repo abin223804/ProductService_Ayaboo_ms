@@ -102,21 +102,69 @@ const createBrand = async (req, res) => {
 
 
 
- const getAllBrands = async (req, res) => {
-    try {
-      const brands = await Brand.find({ isDeleted: false });
+//update with sorting
+
+
+//  const getAllBrands = async (req, res) => {
+//     try {
+//       const brands = await Brand.find({ isDeleted: false });
   
-      res.status(200).json({
-        success: true,
-        total: brands.length,
-        data: brands,
-      });
+//       res.status(200).json({
+//         success: true,
+//         total: brands.length,
+//         data: brands,
+//       });
   
-    } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
+//     } catch (error) {
+//       res.status(500).json({ success: false, message: error.message });
+//     }
+//   };
+  
+// const getAllBrands = async (req, res) => {
+//   try {
+//     const { status } = req.body;
+
+//     let filter = { isDeleted: false };
+    
+//     if (status && ["pending", "rejected", "approved"].includes(status)) {
+//       filter.status = status;
+//     }
+
+//     const brands = await Brand.find(filter);
+
+//     res.status(200).json({
+//       success: true,
+//       total: brands.length,
+//       data: brands,
+//     });
+
+//   } catch (error) {
+//     res.status(500).json({ success: false, message: error.message });
+//   }
+// };
+
+const getAllBrands = async (req, res) => {
+  try {
+    const { status } = req.body;
+
+    let filter = { isDeleted: false };
+    
+    if (status && ["pending", "rejected", "approved"].includes(status)) {
+      filter.status = status;
     }
-  };
-  
+
+    const brands = await Brand.find(filter);
+
+    res.status(200).json({
+      success: true,
+      total: brands.length,
+      data: brands,
+    });
+
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 
 
    const updateBrand = async (req, res) => {
