@@ -72,7 +72,6 @@ const getAllCategories = async (req, res) => {
       filter.published = true;
     }
 
-    // Fetch categories based on the filter
     const categories = await Category.find(filter).populate("subcategories");
 
     return res.status(200).json({ success: true, categories });
