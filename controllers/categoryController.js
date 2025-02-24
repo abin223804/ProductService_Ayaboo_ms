@@ -55,7 +55,7 @@ const createCategory = async (req, res) => {
 
 const getAllCategories = async (req, res) => {
     try {
-      const categories = await Category.find({ isDeleted: false }).populate("subcategories");
+      const categories = await Category.find({ isDeleted: false,published:true }).populate("subcategories");
       return res.status(200).json({ success: true, category:categories });
     } catch (error) {
       return res.status(500).json({ success: false, message: "Server error", error: error.message });
@@ -74,7 +74,7 @@ const getAllCategories = async (req, res) => {
     
     category.subcategories = category.subcategories
       .map(subId => categoryMap.get(subId.toString()))
-      .filter(sub => sub); 
+      .filter(sub => sub && sub.published === true); 
   
     
     for (let i = 0; i < category.subcategories.length; i++) {
@@ -87,7 +87,7 @@ const getAllCategories = async (req, res) => {
   const getAllCategories1 = async (req, res) => {
     try {
       
-      let categories = await Category.find({ isDeleted: false }).lean();
+      let categories = await Category.find({ isDeleted: false,published:true }).lean();
   
       
       const categoryMap = new Map(categories.map(cat => [cat._id.toString(), cat]));
