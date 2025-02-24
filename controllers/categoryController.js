@@ -53,15 +53,33 @@ const createCategory = async (req, res) => {
   }
 };
 
-const getAllCategories = async (req, res) => {
-    try {
-      const categories = await Category.find({ isDeleted: false,published:true }).populate("subcategories");
-      return res.status(200).json({ success: true, category:categories });
-    } catch (error) {
-      return res.status(500).json({ success: false, message: "Server error", error: error.message });
-    }
-  };
+// const getAllCategories = async (req, res) => {
+//     try {
+//       const categories = await Category.find({ isDeleted: false,published:true }).populate("subcategories");
+//       return res.status(200).json({ success: true, category:categories });
+//     } catch (error) {
+//       return res.status(500).json({ success: false, message: "Server error", error: error.message });
+//     }
+//   };
 
+const getAllCategories = async (req, res) => {
+  try {
+    const { admin } = req.query; 
+
+    let filter = { isDeleted: false };
+
+    if (!admin) {
+      filter.published = true;
+    }
+
+    // Fetch categories based on the filter
+    const categories = await Category.find(filter).populate("subcategories");
+
+    return res.status(200).json({ success: true, categories });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Server error", error: error.message });
+  }
+};
 
 
 
