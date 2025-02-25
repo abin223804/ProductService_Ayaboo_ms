@@ -101,28 +101,82 @@ const getAllCategories = async (req, res) => {
     return category;
   };
   
+  // const getAllCategories1 = async (req, res) => {
+  //   try {
+      
+  //     let categories = await Category.find({ isDeleted: false,published:true }).lean();
+  
+      
+  //     const categoryMap = new Map(categories.map(cat => [cat._id.toString(), cat]));
+  
+      
+  //     let rootCategories = categories.filter(cat => !cat.parentId);
+  
+      
+  //     for (let i = 0; i < rootCategories.length; i++) {
+  //       rootCategories[i] = await populateSubcategoriesRecursively(categoryMap, rootCategories[i]);
+  //     }
+  
+  //     return res.status(200).json({ success: true, categories: rootCategories });
+  //   } catch (error) {
+  //     return res.status(500).json({ success: false, message: "Server error", error: error.message });
+  //   }
+  // };
+  
+  
   const getAllCategories1 = async (req, res) => {
     try {
-      
-      let categories = await Category.find({ isDeleted: false,published:true }).lean();
-  
-      
-      const categoryMap = new Map(categories.map(cat => [cat._id.toString(), cat]));
-  
-      
-      let rootCategories = categories.filter(cat => !cat.parentId);
-  
-      
-      for (let i = 0; i < rootCategories.length; i++) {
-        rootCategories[i] = await populateSubcategoriesRecursively(categoryMap, rootCategories[i]);
-      }
-  
-      return res.status(200).json({ success: true, categories: rootCategories });
+        let categories = await Category.find({ isDeleted: false }).lean();
+
+        const categoryMap = new Map(categories.map(cat => [cat._id.toString(), cat]));
+
+        let rootCategories = categories.filter(cat => !cat.parentId);
+
+        const populateSubcategoriesRecursively = (category) => {
+            if (!category || !category.subcategories) return null;
+
+            let subcategories = category.subcategories
+                .map(subId => categoryMap.get(subId.toString()))
+                .filter(sub => sub); // Get valid subcategories
+
+            let filteredSubcategories = [];
+            for (let sub of subcategories) {
+                if (sub.published) {
+                    filteredSubcategories.push(populateSubcategoriesRecursively(sub));
+                } else {
+                    let validChildren = sub.subcategories
+                        .map(subId => categoryMap.get(subId.toString()))
+                        .filter(child => child && child.published)
+                        .map(child => populateSubcategoriesRecursively(child));
+
+                    filteredSubcategories.push(...validChildren);
+                }
+            }
+
+            return { ...category, subcategories: filteredSubcategories };
+        };
+
+        let finalCategories = [];
+        for (let category of rootCategories) {
+            if (!category.published) {
+                // If the main parent is unpublished, add only its published children as top-level categories
+                let publishedChildren = category.subcategories
+                    .map(subId => categoryMap.get(subId.toString()))
+                    .filter(sub => sub && sub.published)
+                    .map(sub => populateSubcategoriesRecursively(sub));
+
+                finalCategories.push(...publishedChildren);
+            } else {
+                let populatedCategory = populateSubcategoriesRecursively(category);
+                finalCategories.push(populatedCategory);
+            }
+        }
+
+        return res.status(200).json({ success: true, categories: finalCategories });
     } catch (error) {
-      return res.status(500).json({ success: false, message: "Server error", error: error.message });
+        return res.status(500).json({ success: false, message: "Server error", error: error.message });
     }
-  };
-  
+};
   
 
  const updateCategory = async (req, res) => {
