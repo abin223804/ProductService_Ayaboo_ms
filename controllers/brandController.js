@@ -1,66 +1,75 @@
-import Brand from '../models/brand.js';
-import jwt from 'jsonwebtoken';
-
+import Brand from "../models/brand.js";
+import jwt from "jsonwebtoken";
 
 const createBrand = async (req, res) => {
   try {
-    const { name, logo, trademarkNumber, trademarkCertificate, certificateOwnerName, nonObjectiveDocument } = req.body;
+    const {
+      name,
+      logo,
+      trademarkNumber,
+      trademarkCertificate,
+      certificateOwnerName,
+      nonObjectiveDocument,
+    } = req.body;
 
-    
-    if (!name || !logo || !trademarkNumber || !trademarkCertificate || !certificateOwnerName) {
-      return res.status(400).json({ success: false, message: "All required fields must be provided" });
+    if (
+      !name ||
+      !logo ||
+      !trademarkNumber ||
+      !trademarkCertificate ||
+      !certificateOwnerName
+    ) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "All required fields must be provided",
+        });
     }
 
-    
-    if (!req.cookies) {
-      return res.status(401).json({ message: "Unauthorized: Missing cookies" });
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res
+        .status(401)
+        .json({
+          message: "Unauthorized: Missing or invalid Authorization header",
+        });
     }
 
-    let token;
+    const token = authHeader.split(" ")[1];
+
+    let decoded;
+    let userId;
     let createdBy;
 
-    
-    if (req.cookies.ad_b2b_tkn) {
-      token = req.cookies.ad_b2b_tkn;
-      createdBy = "Admin";
-    } else if (req.cookies.sl_b2b_tkn) {
-      token = req.cookies.sl_b2b_tkn;
-      createdBy = "Seller";
-    } else if (req.cookies.st_b2b_tkn) {
-      token = req.cookies.st_b2b_tkn;
-      createdBy = "Store";
-    } else {
-      return res.status(401).json({ message: "Unauthorized: Missing authentication token in cookies" });
-    }
-
-    
-    let secretKey;
-    if (createdBy === "Admin") {
-      secretKey = process.env.JWT_SECRET_ADMIN;
-    } else if (createdBy === "Seller") {
-      secretKey = process.env.JWT_SECRET_SELLER;
-    } else if (createdBy === "Store") {
-      secretKey = process.env.JWT_SECRET_STORE;
-    } else {
-      return res.status(401).json({ message: "Unauthorized: Unknown token type" });
-    }
-
-    
-    let userId;
     try {
-      const decoded = jwt.verify(token, secretKey);
-      userId = decoded.userId;
+      decoded = jwt.verify(token, process.env.JWT_SECRET_ADMIN);
+      createdBy = "Admin";
     } catch (err) {
-      return res.status(401).json({ message: "Unauthorized: Invalid token" });
+      try {
+        decoded = jwt.verify(token, process.env.JWT_SECRET_SELLER);
+        createdBy = "Seller";
+      } catch (err) {
+        try {
+          decoded = jwt.verify(token, process.env.JWT_SECRET_STORE);
+          createdBy = "Store";
+        } catch (err) {
+          return res
+            .status(401)
+            .json({ message: "Unauthorized: Invalid token" });
+        }
+      }
     }
 
-    
+    userId = decoded.userId;
+
     const existingBrand = await Brand.findOne({ trademarkNumber });
     if (existingBrand) {
-      return res.status(400).json({ success: false, message: "Trademark number already exists" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Trademark number already exists" });
     }
 
-    
     const brand = new Brand({
       name,
       logo,
@@ -73,61 +82,26 @@ const createBrand = async (req, res) => {
     });
 
     await brand.save();
-    return res.status(201).json({ success: true, message: "Brand created successfully", data: brand });
-
+    return res
+      .status(201)
+      .json({
+        success: true,
+        message: "Brand created successfully",
+        data: brand,
+      });
   } catch (error) {
-    return res.status(500).json({ success: false, message: "Server error", error: error.message });
+    return res
+      .status(500)
+      .json({ success: false, message: "Server error", error: error.message });
   }
 };
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-  
-
-
-
-
-  
-
-
-
-
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 const getAllBrands = async (req, res) => {
   try {
     const { status } = req.body;
 
     let filter = { isDeleted: false };
-    
+
     if (status && ["pending", "rejected", "approved"].includes(status)) {
       filter.status = status;
     }
@@ -139,97 +113,119 @@ const getAllBrands = async (req, res) => {
       total: brands.length,
       data: brands,
     });
-
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
+const updateBrand = async (req, res) => {
+  try {
+    const {
+      name,
+      logo,
+      trademarkNumber,
+      trademarkCertificate,
+      certificateOwnerName,
+      nonObjectiveDocument,
+    } = req.body;
 
-   const updateBrand = async (req, res) => {
-    try {
-      const { name, logo, trademarkNumber, trademarkCertificate, certificateOwnerName, nonObjectiveDocument } = req.body;
-  
-      const brand = await Brand.findById(req.params.id);
-  
-      if (!brand || brand.isDeleted) {
-        return res.status(404).json({ success: false, message: 'Brand not found or has been deleted' });
-      }
-  
-      
-      if (name) brand.name = name;
-      if (logo) brand.logo = logo;
-      if (trademarkNumber) brand.trademarkNumber = trademarkNumber;
-      if (trademarkCertificate) brand.trademarkCertificate = trademarkCertificate;
-      if (certificateOwnerName) brand.certificateOwnerName = certificateOwnerName;
-      if (nonObjectiveDocument) brand.nonObjectiveDocument = nonObjectiveDocument;
-  
-      await brand.save();
-      res.status(200).json({ success: true, message: 'Brand updated successfully', data: brand });
-  
-    } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
-    }
-  };
-  
+    const brand = await Brand.findById(req.params.id);
 
-   const softDeleteBrand = async (req, res) => {
-    try {
-      const brand = await Brand.findById(req.params.id);
-  
-      if (!brand || brand.isDeleted) {
-        return res.status(404).json({ success: false, message: 'Brand not found or already deleted' });
-      }
-  
-      brand.isDeleted = true;
-      await brand.save();
-  
-      res.status(200).json({ success: true, message: 'Brand soft deleted successfully', data:brand  });
-  
-    } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
+    if (!brand || brand.isDeleted) {
+      return res
+        .status(404)
+        .json({
+          success: false,
+          message: "Brand not found or has been deleted",
+        });
     }
-  };
-  
-   const hardDeleteAllBrands = async (req, res) => {
-    try {
-      const result = await Brand.deleteMany({}); 
-  
-      res.status(200).json({
+
+    if (name) brand.name = name;
+    if (logo) brand.logo = logo;
+    if (trademarkNumber) brand.trademarkNumber = trademarkNumber;
+    if (trademarkCertificate) brand.trademarkCertificate = trademarkCertificate;
+    if (certificateOwnerName) brand.certificateOwnerName = certificateOwnerName;
+    if (nonObjectiveDocument) brand.nonObjectiveDocument = nonObjectiveDocument;
+
+    await brand.save();
+    res
+      .status(200)
+      .json({
         success: true,
-        message: `Successfully deleted ${result.deletedCount} brands permanently.`,
+        message: "Brand updated successfully",
+        data: brand,
       });
-  
-    } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
-    }
-  };
-  
-   const hardDeleteBrand = async (req, res) => {
-    try {
-      const brand = await Brand.findById(req.params.id);
-  
-      if (!brand) {
-        return res.status(404).json({ success: false, message: 'Brand not found' });
-      }
-  
-      await Brand.findByIdAndDelete(req.params.id);
-  
-      res.status(200).json({ success: true, message: 'Brand permanently deleted' });
-  
-    } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
-    }
-  };
-  
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 
+const softDeleteBrand = async (req, res) => {
+  try {
+    const brand = await Brand.findById(req.params.id);
+
+    if (!brand || brand.isDeleted) {
+      return res
+        .status(404)
+        .json({
+          success: false,
+          message: "Brand not found or already deleted",
+        });
+    }
+
+    brand.isDeleted = true;
+    await brand.save();
+
+    res
+      .status(200)
+      .json({
+        success: true,
+        message: "Brand soft deleted successfully",
+        data: brand,
+      });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const hardDeleteAllBrands = async (req, res) => {
+  try {
+    const result = await Brand.deleteMany({});
+
+    res.status(200).json({
+      success: true,
+      message: `Successfully deleted ${result.deletedCount} brands permanently.`,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const hardDeleteBrand = async (req, res) => {
+  try {
+    const brand = await Brand.findById(req.params.id);
+
+    if (!brand) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Brand not found" });
+    }
+
+    await Brand.findByIdAndDelete(req.params.id);
+
+    res
+      .status(200)
+      .json({ success: true, message: "Brand permanently deleted" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 
 export default {
-
-    createBrand,
-    getAllBrands,
-    updateBrand,
-    softDeleteBrand,
-    hardDeleteAllBrands,
-    hardDeleteBrand,
-}
+  createBrand,
+  getAllBrands,
+  updateBrand,
+  softDeleteBrand,
+  hardDeleteAllBrands,
+  hardDeleteBrand,
+};
