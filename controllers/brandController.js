@@ -96,27 +96,27 @@ const createBrand = async (req, res) => {
   }
 };
 
-const getAllBrands = async (req, res) => {
-  try {
-    const { status } = req.body;
+// const getAllBrands = async (req, res) => {
+//   try {
+//     const { status } = req.body;
 
-    let filter = { isDeleted: false };
+//     let filter = { isDeleted: false };
 
-    if (status && ["pending", "rejected", "approved"].includes(status)) {
-      filter.status = status;
-    }
+//     if (status && ["pending", "rejected", "approved"].includes(status)) {
+//       filter.status = status;
+//     }
 
-    const brands = await Brand.find(filter);
+//     const brands = await Brand.find(filter);
 
-    res.status(200).json({
-      success: true,
-      total: brands.length,
-      data: brands,
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
+//     res.status(200).json({
+//       success: true,
+//       total: brands.length,
+//       data: brands,
+//     });
+//   } catch (error) {
+//     res.status(500).json({ success: false, message: error.message });
+//   }
+// };
 
 const updateBrand = async (req, res) => {
   try {
@@ -262,6 +262,39 @@ const updateBrandStatus = async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
+};
+
+
+
+
+const getAllBrands = async (req, res) => {
+  try {
+    const { status } = req.body;
+
+    let filter = { isDeleted: false };
+
+    // Merge req.query while ensuring it doesn't override protected fields
+    Object.keys(req.query).forEach((key) => {
+      if (!["isDeleted"].includes(key)) {
+        // Prevent overwriting
+        filter[key] = req.query[key];
+      }
+    });
+
+    if (status && ["pending", "rejected", "approved"].includes(status)) {
+      filter.status = status;
+    }
+
+    const brands = await Brand.find(filter);
+
+    res.status(200).json({
+      success: true,
+      total: brands.length,
+      data: brands,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
 
 
