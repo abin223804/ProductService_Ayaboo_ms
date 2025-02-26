@@ -237,10 +237,10 @@ const updateBrandStatus = async (req, res) => {
 
   
 
-    const { status } = req.body;
+    const { status, statusReason } = req.body;
 
-    if (!["approved", "rejected"].includes(status)) {
-      return res.status(400).json({ success: false, message: 'Invalid status. Use "approved" or "rejected".' });
+    if (!["approved", "rejected", "pending"].includes(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status. Use "approved", "rejected", or "pending".' });
     }
 
     const brand = await Brand.findById(req.params.id);
@@ -250,11 +250,12 @@ const updateBrandStatus = async (req, res) => {
     }
 
     brand.status = status;
+    brand.statusReason = statusReason || ""; 
     await brand.save();
 
     res.status(200).json({
       success: true,
-      message: `Brand has been ${status}.`,
+      message: `Brand status updated to ${status}.`,
       data: brand,
     });
 

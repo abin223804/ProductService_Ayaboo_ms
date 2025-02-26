@@ -36,6 +36,9 @@ const BrandSchema = new mongoose.Schema(
       enum:[ "pending","rejected","approved"],
       default: "pending",
     },
+    statusReason:{
+      type: String,
+    }
   },
   { timestamps: true }
 );
