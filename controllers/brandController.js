@@ -221,6 +221,49 @@ const hardDeleteBrand = async (req, res) => {
   }
 };
 
+const updateBrandStatus = async (req, res) => {
+  try {
+    const token = req.cookies?.ad_b2b_tkn;
+    if (!token) {
+      return res.status(401).json({ success: false, message: "Unauthorized: Admin token is missing" });
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET_ADMIN);
+    } catch (error) {
+      return res.status(403).json({ success: false, message: "Invalid or expired admin token" });
+    }
+
+  
+
+    const { status } = req.body;
+
+    if (!["approved", "rejected"].includes(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status. Use "approved" or "rejected".' });
+    }
+
+    const brand = await Brand.findById(req.params.id);
+
+    if (!brand || brand.isDeleted) {
+      return res.status(404).json({ success: false, message: "Brand not found or has been deleted" });
+    }
+
+    brand.status = status;
+    await brand.save();
+
+    res.status(200).json({
+      success: true,
+      message: `Brand has been ${status}.`,
+      data: brand,
+    });
+
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
 export default {
   createBrand,
   getAllBrands,
@@ -228,4 +271,5 @@ export default {
   softDeleteBrand,
   hardDeleteAllBrands,
   hardDeleteBrand,
+  updateBrandStatus,
 };
