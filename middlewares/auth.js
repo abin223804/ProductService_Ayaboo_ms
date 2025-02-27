@@ -4,19 +4,22 @@ import axios from "axios";
 
 dotenv.config();
 
-
-
-
 const USER_SERVICE_URL = process.env.USER_SERVICE_URL;
 
 const fetchAdminFromService = async (token) => {
   try {
-    const response = await axios.get(`${USER_SERVICE_URL}/admin/getCurrentAdmin`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data?.admin || null; 
+    const response = await axios.get(
+      `${USER_SERVICE_URL}/admin/getCurrentAdmin`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    return response.data?.admin || null;
   } catch (error) {
-    console.error("Error fetching admin from service:", error.response?.data || error.message);
+    console.error(
+      "Error fetching admin from service:",
+      error.response?.data || error.message
+    );
     return null;
   }
 };
@@ -36,9 +39,9 @@ const authenticateAdmin = async (req, res, next) => {
   }
 
   try {
-    jwt.verify(token, process.env.JWT_SECRET_ADMIN); 
+    jwt.verify(token, process.env.JWT_SECRET_ADMIN);
 
-    req.admin = await fetchAdminFromService(token); 
+    req.admin = await fetchAdminFromService(token);
 
     if (!req.admin) {
       return res.status(401).json({
@@ -57,51 +60,6 @@ const authenticateAdmin = async (req, res, next) => {
     });
   }
 };
-
-
-const authenticateUser = async (req, res, next) => {
-  console.log("User authenticated");
-  let token =
-    req.cookies["us_b2b_tkn"] ||
-    (req.headers.authorization && req.headers.authorization.split(" ")[1]);
-
-  if (!token) {
-    return res.status(401).json({
-      success: false,
-      message: "Not authorized, no token.",
-    });
-  }
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET_USER);
-    req.user = await User.findById(decoded.userId).select("-password");
-
-    if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        message: "Not authorized, user not found.",
-      });
-    }
-
-    if (req.user.isBlocked) {
-      return res.status(403).json({
-        success: false,
-        message: "User is blocked.",
-      });
-    }
-
-    next();
-  } catch (error) {
-    res.status(401).json({
-      success: false,
-      message: "Not authorized, token failed.",
-      error: error.message,
-    });
-  }
-};
-
-
-
 
 const authenticateSeller = async (req, res, next) => {
   console.log("Seller authenticated");
@@ -144,10 +102,6 @@ const authenticateSeller = async (req, res, next) => {
   }
 };
 
-
-
-
-
 const authenticateStore = async (req, res, next) => {
   console.log("Store authenticated");
   let token =
@@ -162,9 +116,7 @@ const authenticateStore = async (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET_STORE
-
-    );
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_STORE);
     req.store = await Store.findById(decoded.userId).select("-password");
 
     if (!req.store) {
@@ -191,62 +143,4 @@ const authenticateStore = async (req, res, next) => {
   }
 };
 
-
-const authenticateUserOrKyc = async (req, res, next) => {
-  let token =
-    req.cookies["us_b2b_tkn"] ||
-    req.cookies["us_tkn_kyc"] ||
-    (req.headers.authorization && req.headers.authorization.split(" ")[1]);
-
-  if (!token) {
-    return res.status(401).json({
-      success: false,
-      message: "Not authorized, no token.",
-    });
-  }
-
-  try {
-    let decoded;
-    let secret;
-    if (req.cookies["us_b2b_tkn"]) {
-      secret = process.env.JWT_SECRET_USER;
-    } else if (req.cookies["us_tkn_kyc"]) {
-      secret = process.env.JWT_SECRET_Kycpage;
-    } else {
-      secret = process.env.JWT_SECRET_USER || process.env.JWT_SECRET_Kycpage;
-    }
-
-    decoded = jwt.verify(token, secret);
-    req.user = await User.findById(decoded.userId).select("-password");
-
-    if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        message: "Not authorized, user not found.",
-      });
-    }
-
-    if (req.user.isBlocked) {
-      return res.status(403).json({
-        success: false,
-        message: "User is blocked.",
-      });
-    }
-
-    next();
-  } catch (error) {
-    res.status(401).json({
-      success: false,
-      message: "Not authorized, token failed.",
-      error: error.message,
-    });
-  }
-};
-
-
-
-
-
-
-
-export {  authenticateAdmin,authenticateSeller,authenticateStore,authenticateUserOrKyc  };
+export { authenticateAdmin, authenticateSeller, authenticateStore };
