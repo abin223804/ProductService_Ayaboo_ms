@@ -9,6 +9,7 @@ dotenv.config();
 import mediaRoute from './routes/mediaRoute.js';
 import categoryRoute from './routes/categoryRoute.js';
 import brandRoute from './routes/brandRoute.js';
+import productRoute from './routes/productRoute.js';
 import connectDB from "./config/db.js";
 
 
@@ -33,6 +34,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/media", mediaRoute);
 app.use("/category", categoryRoute);
 app.use("/brand", brandRoute);
+app.use("/product", productRoute);
 
 
 app.listen(process.env.PORT, () => {

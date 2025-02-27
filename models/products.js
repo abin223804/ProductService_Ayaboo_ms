@@ -1,13 +1,26 @@
 import mongoose from "mongoose";
 
 const taxDetailsSchema = new mongoose.Schema({
-  taxSlab: [
+  hsn_sac_number: String,
+  non_gst_goods: {
+    type: String,
+    enum: ["yes", "no"],
+  },
+  calculation_types: {
+    type: String,
+    enum: ["on_item_rate" , "on_value"],
+  },
+  on_items_rate_details: [
     {
-      name: String,
+      greaterThan: Number,
+      upto: Number,
+      igst: Number,
+      cgst: Number,
+      sgst: Number,
+      cess: Number,
     },
   ],
-  isCess: Boolean,
-  cess: Number,
+  isCess: { type: Boolean, default: false },
 });
 
 const variationDetailSchema = new mongoose.Schema({
@@ -23,7 +36,7 @@ const variationSchema = new mongoose.Schema({
   image: String,
   colorCode: String,
   colorName: String,
-  sample: Boolean,
+  sample: { type: Boolean, default: false },
   details: [variationDetailSchema],
 });
 
@@ -34,53 +47,49 @@ const pricePerPieceSchema = new mongoose.Schema({
 });
 
 const productDimensionsSchema = new mongoose.Schema({
-  productHeight: Number,
-  productLength: Number,
-  productWidth: Number,
+  product_height: Number,
+  product_length: Number,
+  product_width: Number,
 });
 
 const productSchema = new mongoose.Schema(
   {
-    productOwner: String,
-    productName: String,
+    product_owner: String,
+    product_name: String,
     mrp: Number,
-    productSku: String,
+    product_sku: String,
     barcode: String,
-    brand: String,
-    keywords: String,
-    minimumQuantity: Number,
-    productWeight: Number,
-    productDimensions: productDimensionsSchema,
-    specialFeatures: String,
-    careGuide: String,
+    brand: { type: mongoose.Schema.Types.ObjectId, ref: "Brand" },
+    categoryId: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
+    keywords: [String],
+    minimum_quantity: Number,
+    product_weight: Number,
+    product_dimensions: productDimensionsSchema,
     description: String,
-    taxDetails: taxDetailsSchema,
-    isFeaturedProduct: Boolean,
-    isPublished: Boolean,
-    isTodaysDeal: Boolean,
-    isBestSelling: Boolean,
-    galleryImage: [String],
+    tax_details: taxDetailsSchema,
+    is_featured_product: { type: Boolean, default: false },
+    is_published: { type: Boolean, default: false },
+    is_todays_deal: { type: Boolean, default: false },
+    gallery_image: [String],
     thumbnails: [String],
-    variations: [variationSchema],
     sizeImages: [String],
     basePrice: Number,
     samplePrice: Number,
     discount: Number,
-    discountType: String,
-    pricePerPieces: [pricePerPieceSchema],
+    discount_type: String,
+    price_per_pieces: [pricePerPieceSchema],
     selectWise: String,
-    store: String,
-    cod: Boolean,
-    freeShipping: Boolean,
+    variations: [variationSchema],
+    store: { type: mongoose.Schema.Types.ObjectId, ref: "Store" },
+    cod: { type: Boolean, default: false },
+    freeShipping: { type: Boolean, default: false },
     ratingCount: Number,
     totalRatings: Number,
-    unitSoled: Number,
+    unitSold: Number,
     avgSalePerCustomer: Number,
     returnRate: Number,
     searchCount: Number,
     wishlistCount: Number,
-    createdAt: Date,
-    updatedAt: Date,
     status: String,
     rejectReason: String,
   },
